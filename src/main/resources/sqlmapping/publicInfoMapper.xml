@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="publicinfo" >
+	<select id="queryAllInfoSql" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,title,descripter,content,userid,createname,createdate FROM infoManager WHERE state=0  ORDER BY createdate DESC
+	</select>
+	
+	
+	<select id="queryInfoByIdSql" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,title,descripter,content,userid,createname,createdate FROM infoManager WHERE state=0 AND id=#{id}  ORDER BY createdate DESC
+	</select>
+	
+	<select id="queryInfoByAuthorSql" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		<bind name="createname" value="'%' + createname + '%'" />
+		SELECT id,title,descripter,content,userid,createname,createdate FROM infoManager WHERE state=0 AND createname LIKE #{createname}  ORDER BY createdate DESC
+	</select>
+	
+	
+	<update id="deleteInfoByIdSql" parameterType="java.util.HashMap">
+		UPDATE infoManager SET state=1 WHERE id=#{id}
+	</update>
+	
+	<insert id="addInfoSql" parameterType="java.util.HashMap">
+		INSERT INTO infoManager(id,title,descripter,content,userid,createname,createdate) VALUES (#{id},#{title},#{descripter},#{content},#{userid},#{createname},#{createdate});
+	</insert>
+	
+	<update id="updateInfoSql" parameterType="java.util.HashMap">
+		UPDATE infoManager 
+		<set>
+			<if test="title!=null">title=#{title},</if>
+			<if test="descripter!=null">descripter=#{descripter},</if>
+			<if test="content!=null">content=#{content},</if>
+			<if test="createdate!=null">createdate=#{createdate}</if>
+		</set>
+		WHERE id=#{id}
+	</update>
+	
+	<select id="queryAllNoticeSql" resultType="java.util.HashMap" >
+		SELECT id,title,descripter,content,userid,createname,createdate FROM noticeManager WHERE state=0  ORDER BY createdate DESC
+	</select>
+	
+	<select id="queryNoticeByIdSql" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,title,descripter,content,userid,createname,createdate FROM noticeManager WHERE state=0 AND id=#{id}  ORDER BY createdate DESC
+	</select>
+	
+	<select id="queryNoticeByAuthorSql" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		<bind name="createname" value="'%' + createname + '%'" />
+		SELECT id,title,descripter,content,userid,createname,createdate FROM noticeManager WHERE state=0 AND createname LIKE #{createname}  ORDER BY createdate DESC
+	</select>
+	
+	<update id="deleteNoticeByIdSql" parameterType="java.util.HashMap">
+		UPDATE noticeManager SET state=1 WHERE id=#{id}
+	</update>
+	
+	<insert id="addNoticeSql" parameterType="java.util.HashMap">
+		INSERT INTO noticeManager(id,title,descripter,content,userid,createname,createdate) VALUES (#{id},#{title},#{descripter},#{content},#{userid},#{createname},#{createdate});
+	</insert>
+	
+	<update id="updateNotcieSql" parameterType="java.util.HashMap">
+		UPDATE noticeManager 
+		<set>
+			<if test="title!=null">title=#{title},</if>
+			<if test="descripter!=null">descripter=#{descripter},</if>
+			<if test="content!=null">content=#{content},</if>
+			<if test="createdate!=null">createdate=#{createdate}</if>
+		</set>
+		WHERE id=#{id}
+	</update>
+	
+</mapper>

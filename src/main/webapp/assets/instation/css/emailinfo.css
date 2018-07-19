@@ -1,0 +1,28 @@
+.message .emailInfo{
+    margin-bottom: 30px;
+}
+
+.message .emailInfo h1{
+    background: #67C2EF;
+    color: #fff;
+    text-shadow: 0px -1px 0px rgba(0,0,0,.15);
+    padding: 20px;
+}
+
+.message .emailInfo .from{
+    display: inline-block;
+    width: 70%;
+    font-size: 12px;
+}
+
+.message .emailInfo .date{
+    display: inline-block;
+    width: 29%;
+    text-align: right;
+    float: right;
+    font-size: 12px;
+}
+
+.message .replyForm textarea{
+    width: 100%;
+}

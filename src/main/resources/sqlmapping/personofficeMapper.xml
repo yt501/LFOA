@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="personoffice" >
+	<select id="queryAddContentSql" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,depater,NAME,age,phone,email,createname,createdate,userid FROM content WHERE state=0 AND id IN(SELECT achiveuserid FROM contentRelaction WHERE userid=#{userid}) ORDER BY createdate DESC
+	</select>
+	
+	<select id="queryNotAddContentSql" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,depater,NAME,age,phone,email,createname,createdate FROM content WHERE state=0 AND id NOT IN(SELECT achiveuserid FROM contentRelaction WHERE userid=#{userid}) ORDER BY createdate DESC
+	</select>
+	
+	<insert id="addContentSql" parameterType="java.util.HashMap">
+		INSERT INTO content(id,depater,NAME,age,phone,email,createname,createdate) 
+		VALUES(#{id},#{depater},#{NAME},#{age},#{phone},#{email},#{createname},#{createdate});
+	</insert>
+	
+	<update id="updateContentSql" parameterType="java.util.HashMap">
+		UPDATE content
+		<set>
+			<if test="depater!=null">depater=#{depater},</if>
+			<if test="NAME!=null">NAME=#{NAME},</if>
+			<if test="age!=null">age=#{age},</if>
+			<if test="phone!=null">phone=#{phone},</if>
+			<if test="email!=null">email=#{email},</if>
+			<if test="createname!=null">createname=#{createname}</if>
+		</set>
+		WHERE id=#{id}
+	</update>
+	
+	<delete id="deleteContentSql" parameterType="java.util.HashMap">
+		UPDATE content SET state=1 WHERE id=#{id}
+	</delete>
+	
+	<insert id="addContentToMeSql" parameterType="java.util.HashMap">
+		INSERT INTO contentRelaction(userid,achiveuserid) VALUES(#{userid},#{achiveuserid})
+	</insert>
+	
+	<select id="queryNotAddContentByParamSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<bind name="NAME" value="'%' + NAME + '%'" />
+		<bind name="phone" value="'%' + phone + '%'" />
+		SELECT id,depater,NAME,age,phone,email,createname,createdate FROM content 
+		WHERE 1=1
+		 <if test="depater!=null and depater!=&quot;-1&quot;">AND depater=#{depater}</if>
+		 <if test="NAME!=null">AND NAME LIKE #{NAME}</if>
+		 <if test="phone!=null">AND phone LIKE #{phone}</if>
+		 AND state=0 
+		 AND id NOT IN(SELECT achiveuserid FROM contentRelaction WHERE userid=#{userid}) 
+		 ORDER BY createdate DESC
+	</select>
+	
+	<delete id="deleteContentToMeSql" parameterType="java.util.HashMap">
+		DELETE FROM contentrelaction WHERE userid=#{userid} AND achiveuserid=#{achiveuserid}
+	</delete>
+	
+	
+	<!-- 任务相关sql -->
+	<select id="queryAllTaskInfoSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT id,content,senduserid,state,createname,createdate FROM task 
+		WHERE state!=0 
+		AND delstate=0 
+		AND id IN(SELECT taskid FROM task_user WHERE userid=#{userid})
+		ORDER BY state DESC
+	</select>
+	
+	<!-- 完成任务 -->
+	<update id="updateTaskCompleSql" parameterType="java.util.HashMap">
+		UPDATE task SET state=0 WHERE id=#{id}
+	</update>
+	
+	<!-- 删除用户任务 -->
+	<delete id="deleteUserTaskSql" parameterType="java.util.HashMap">
+		DELETE FROM task_user WHERE userid=#{userid} AND taskid=#{taskid}
+	</delete>
+	
+	<!-- 更新用户任务 -->
+	<update id="updateTaskInfoSql" parameterType="java.util.HashMap">
+		UPDATE task 
+		<set>
+			<if test="content!=null">content=#{content},</if>
+			<if test="state!=null">state=#{state},</if>
+			<if test="createdate!=null">createdate=#{createdate}</if>
+		</set>
+		WHERE id=#{id}
+	</update>
+	
+	<!-- 根据id查询任务信息 -->
+	<select id="queryTaskByIdSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT id,content,senduserid,state,createname,createdate FROM task WHERE id=#{id}
+	</select>
+	
+	<!-- 插入任务 -->
+	<insert id="insertTaskSql" parameterType="java.util.HashMap">
+		INSERT INTO task(id,content,senduserid,state,createname,createdate) 
+			VALUES (#{id},#{content},#{userid},#{state},#{createname},#{createdate})
+	</insert>
+	
+	<!-- 将任务发送给指定用户 -->
+	<insert id="insertTaskUserSql" parameterType="java.util.HashMap">
+		INSERT INTO task_user(userid,taskid) VALUE(#{userid},#{taskid})
+	</insert>
+	
+	<!-- 通过姓名模糊查询出Task信息 -->	
+	<select id="queryTaskByNameSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<bind name="createname" value="'%' + createname + '%'" />
+		SELECT id,content,senduserid,state,createname,createdate FROM task 
+		WHERE state!=0 
+		AND delstate=0 
+		AND id IN(SELECT taskid FROM task_user WHERE userid=#{userid})
+		AND createname like #{createname}
+		ORDER BY state DESC
+	</select>
+	
+	<!-- 查询素有完成的任务 -->
+	<select id="queryAllCompleTaskInfoSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT id,content,senduserid,state,createname,createdate FROM task
+		 WHERE state=0
+		  AND delstate=0
+		  AND id IN(SELECT taskid FROM task_user WHERE userid=#{userid})
+		  ORDER BY createdate DESC	
+	</select>
+	
+	
+	<!-- 日历标签相关sql -->
+	<!-- 根据条件查询相关信息 -->
+	<select id="findCalendarSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT id,content AS title,startdata AS start,enddata AS end FROM calendar
+		WHERE delsing=0
+		AND startdata &gt;= #{start}
+		AND enddata &lt;= #{end}
+		AND userid=#{userid}
+		ORDER BY createdate DESC
+	</select>
+	
+	
+	<!-- 添加操作 -->
+	<insert id="addCalendarSql" parameterType="java.util.HashMap">
+		INSERT INTO calendar(id,content,startdata,enddata,userid,createname,createdate) 
+			VALUES(#{id}
+				,#{content}
+				,#{start}
+				,#{end}
+				,#{userid}
+				,#{createname}
+				,#{createdate})
+	</insert>
+	
+	<!-- 修改日历内容 -->
+	<update id="updateCalendarSql" parameterType="java.util.HashMap">
+		UPDATE calendar 
+		   SET content=#{content} 	
+		   ,startdata=#{start}
+		   ,enddata=#{end}
+		WHERE id=#{id}
+	</update>
+
+	<!--删除相关日历信息 -->
+	<update id="deleteCalendarSql" parameterType="java.util.HashMap">
+		UPDATE calendar 
+		   SET delsing=1 	
+		WHERE id=#{id}
+	</update>	
+</mapper>

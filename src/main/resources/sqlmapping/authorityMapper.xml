@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="authority" >
+	<resultMap type="cn.lf.shiro.model.AuthenticaUser" id="AuthenticaUser"></resultMap>
+	<!-- 根据用户账名查找相关信息 -->
+	<select id="findUserByLoginNameSql" resultMap="AuthenticaUser" parameterType="String">
+		SELECT id,usercode,username,`password`,locked,salt FROM sys_user WHERE usercode=#{username}
+	</select>
+	
+	<!-- 插入用户  -->
+	<insert id="addUserSql" parameterType="java.util.HashMap">
+		INSERT INTO sys_user(id,usercode,username,password) 
+				VALUES(#{id},#{usercode},#{username},#{password})
+	</insert>
+	
+	<!-- 添加用户角色关系 -->
+	<insert id="addUserRoleSql" parameterType="java.util.HashMap">
+		INSERT INTO sys_user_role(id,sys_user_id,sys_role_id) 
+				VALUES(#{id},#{id},#{role})
+	</insert>
+	
+	<!-- 添加联系人 -->
+	<insert id="addContentSql" parameterType="java.util.HashMap">
+		INSERT INTO content(id,depater,NAME,age,phone,email,createname,createdate,userid) 
+		VALUES(#{id},#{dept},#{username},#{age},#{tel},#{usercode},#{createname},#{createdate},#{id})
+	</insert>
+
+	<!-- 查询所有用户信息 -->
+	<select id="findAllUserInfoSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		<if test="username!=null">
+			<bind name="username" value="'%' + username + '%'" />
+		</if>
+		<if test="phone!=null">
+			<bind name="phone" value="'%' + phone + '%'" />
+		</if>
+			SELECT 
+				 u.id AS id,
+				 u.usercode AS usercode,
+				 u.username AS username,
+				 c.id AS contentId,
+				 c.age AS age,
+				 c.phone AS phone,
+				 c.email AS email,
+				 c.depater AS dept,
+ 				 r.sys_role_id AS role,
+ 				 r.id AS roleId,
+				 c.createname AS createname,
+				 c.createdate AS createdate
+			FROM sys_user u,content c,sys_user_role r 
+			WHERE 1=1
+			AND u.id=c.userid 
+			AND r.sys_user_id=u.id
+			AND u.locked=0
+			<if test="id!=null">
+				AND u.id=#{id}
+			</if>
+			<if test="username!=null">
+				AND u.username LIKE #{username}
+			</if>
+			<if test="phone!=null">
+				AND c.phone LIKE #{phone}
+			</if>
+	</select>
+	
+	<!-- 更新用户表 -->
+	<update id="updateUserSql" parameterType="java.util.HashMap">
+		UPDATE sys_user 
+		   SET usercode=#{usercode},
+		   username=#{username}
+		WHERE id=#{id}
+	</update>
+	
+	<!-- 更新联系人表 -->
+	<update id="updateContent" parameterType="java.util.HashMap">
+		UPDATE content
+		   SET NAME =#{username},
+		   age=#{age},
+		   phone=#{tel},
+		   depater=#{dept}
+		WHERE id=#{contentId}
+	</update>
+	
+	<!-- 更新用户角色表 -->
+	<update id="updateUserRole" parameterType="java.util.HashMap">
+		UPDATE sys_user_role
+		   set sys_role_id=#{role}
+		WHERE id=#{roleId}
+	</update>
+	
+	<!-- 删除用户表信息  -->
+	<update id="deleteUser" parameterType="java.util.HashMap">
+		UPDATE sys_user
+		   SET locked=1
+		WHERE id=#{id}
+	</update>
+	<!-- 删除联系人表信息  -->
+	<update id="deleteContent" parameterType="java.util.HashMap">
+		UPDATE content
+		   SET state=1
+		WHERE id=#{contentId}
+	</update>
+	
+	
+	<!-- 根据条件查找资源信息 -->
+	<select id="findAllResourceInfoSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT id,name,type,url,percode,parentid,parentids,sortstring,
+			(SELECT NAME FROM sys_permission WHERE id=sys.parentid) AS parentname
+			FROM sys_permission  sys
+		WHERE available=0
+		<!-- 查询目录信息 -->
+		<if test="selectMenu!=null">
+			AND type='menu'
+		</if>
+		<!-- 根据id查询相关信息 -->
+		<if test="id!=null">
+			AND id=#{id}
+		</if>
+		ORDER BY parentid
+	</select>
+	
+	
+	<!-- 增加资源 -->
+	<insert id="addResourceSql" parameterType="java.util.HashMap">
+		INSERT INTO sys_permission(id,name,type,url,parentid,sortstring)
+				VALUES(#{id},#{name},#{type},#{url},#{parentid},#{sortstring})
+	</insert>
+	
+	<!-- 更新资源 -->
+	<update id="updateResourceSql" parameterType="java.util.HashMap">
+		UPDATE sys_permission
+		   SET name=#{name},
+		   type=#{type},
+		   url=#{url},
+		   parentid=#{parentid},
+		   sortstring=#{sortstring}
+		WHERE id=#{id}
+	</update>
+	
+	<!-- 删除资源信息 -->
+	<update id="deleteResourceSql" parameterType="java.util.HashMap">
+		UPDATE sys_permission
+		   SET available=1
+		WHERE id=#{id}
+	</update>
+	
+	
+	<!-- 角色相关sql -->
+	<!-- 根据条件查询角色信息 -->
+	<select id="findAllRoleSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT id,name FROM sys_role 
+		WHERE available=0
+		<if test="id!=null">
+			AND id=#{id}
+		</if>
+	</select>
+	
+	<!-- 根据条件查找资源id -->
+	<select id="findAddResourceInfoSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT sys_permission_id AS id FROM sys_role_permission WHERE sys_role_id=#{id}
+	</select>
+	
+	<!-- 添加角色 -->
+	<insert id="addRoleSql" parameterType="java.util.HashMap">
+		INSERT INTO sys_role(id,name)
+		 VALUES(#{id},#{name})
+	</insert>
+	
+	<!-- 插入资源和角色的关系 -->
+	<insert id="insertRoleResourceSql" parameterType="java.util.HashMap">
+		INSERT INTO sys_role_permission(id,sys_role_id,sys_permission_id)
+ 			VALUES (#{id},#{roleId},#{resourceId})
+	</insert>
+	
+	<!-- 删除关系 -->
+	<delete id="deleteRoleResourceSql" parameterType="java.util.HashMap">
+		DELETE FROM sys_role_permission WHERE sys_role_id=#{id}
+	</delete>
+	
+	<!-- 删除角色 -->
+	<update id="deleteRoleSql" parameterType="java.util.HashMap">
+		UPDATE sys_role SET available=1 WHERE id=#{id}
+	</update>
+	
+	<!-- 更新角色 -->
+	<update id="updateRoleSql" parameterType="java.util.HashMap">
+		UPDATE sys_role SET name=#{name} where id=#{id}
+	</update>
+	
+	<!-- 根据id查找角色信息 -->
+	<select id="findRoleIdListByUserIdSql" parameterType="string" resultType="string">
+		SELECT sys_role_id AS id FROM sys_user_role WHERE sys_user_id=#{id}
+	</select>
+	
+	<!-- 根据角色id查询资源列表 -->	
+	<select id="findRoleResourceListByRoleIdSql" parameterType="string" resultType="java.util.HashMap">
+		SELECT id,NAME,TYPE,URL FROM sys_permission
+		 WHERE id IN(
+			SELECT sys_permission_id AS id FROM sys_role_permission WHERE sys_role_id=#{roleId})
+	</select>
+	
+	<!-- 查询所有部门信息 -->
+	<select id="findAllDeptSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT id,name FROM depter
+	</select>
+</mapper>

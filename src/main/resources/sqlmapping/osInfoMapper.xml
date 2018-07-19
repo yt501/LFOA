@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="osinfo" >
+	<!-- 插入系统信息相关sql -->
+	<insert id="insertOSInfoSql" parameterType="java.util.HashMap">
+		INSERT INTO system_os_info(id,requesthost,useragent,value,logintype,simpledate,createdate) values (
+					#{id},#{requesthost},#{useragent},#{value},#{logintype},#{simpledate},#{createdate})
+	</insert>
+	
+	<!-- 插入用户操作相关信息 -->
+	<insert id="insertUserOptionSql" parameterType="java.util.HashMap">
+		INSERT INTO user_option(id,cate,user_id,createname,createdate) VALUES 
+							   (#{id},#{cate},#{user_id},'lfsenior',#{createdate});
+	</insert>
+	
+	<!-- 查询用户任务完成信息 -->
+	<select id="clickNumberSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT t1.value AS yes_value,t2.value AS no_value FROM (SELECT COUNT(*) AS 'value' FROM task t1,task_user t2 WHERE t1.id=t2.taskid AND t2.userid=#{userid} AND state =0) t1,(SELECT COUNT(*) AS 'value' FROM task t1,task_user t2 WHERE t1.id=t2.taskid AND t2.userid=#{userid} AND state !=0) t2
+	</select>
+	
+	<!-- 获取用户操作分布 -->
+	<select id="getUserOptionSql" parameterType="java.util.HashMap" resultType="java.lang.String">
+		SELECT IF(t2.value IS NULL,0,t2.value) AS 'value' FROM system_map t1 LEFT JOIN (SELECT COUNT(*) AS 'value',cate FROM user_option t1 WHERE user_id=#{userid} GROUP BY cate) t2 ON t1.map_key=t2.cate WHERE t1.map_cate='user_option' ORDER BY t1.map_value 
+	</select>
+	
+	<!-- 获取所有用户操作分布 -->
+	<select id="getAllOptionSql" resultType="java.lang.String">
+		SELECT COUNT(*) AS 'value' FROM system_map t1,user_option t2 WHERE t1.map_key=t2.cate AND t1.map_cate=t2.map_cate GROUP BY t1.map_value ORDER BY t1.map_value 
+	</select>
+	
+	<!-- 用户满意度调查结果 -->
+	<select id="userStateOptionSql" resultType="java.util.HashMap">
+		SELECT COUNT(t2.cate) AS 'value',t1.map_value AS 'name' FROM system_map t1 LEFT JOIN system_source t2 ON t1.map_key = t2.cate WHERE t1.map_cate='system_source' GROUP BY t1.map_value
+	</select>
+	
+	<!-- 获取用户类别统计 -->
+	<select id="userNumberSql" resultType="java.util.HashMap">
+		SELECT IF(t4.value IS NULL,0,t4.value) AS 'value',t3.name AS 'name' FROM sys_role t3 LEFT JOIN (SELECT COUNT(*) AS 'value',t2.sys_role_id AS role_id FROM sys_user t1,sys_user_role t2 WHERE t1.id=t2.sys_user_id GROUP BY t2.sys_role_id) t4 ON t3.id=t4.role_id
+	</select>
+	
+	<!-- 用户访问来源 -->
+	<select id="userOASourceSql" resultType="java.util.HashMap">
+		select t1.phone as phone,t2.pc as pc,t3.`all` as `all` from (SELECT COUNT(*) AS phone FROM system_os_info WHERE logintype=0) t1,(SELECT COUNT(*) AS pc FROM system_os_info WHERE logintype=1) t2,(SELECT COUNT(*) AS `all` FROM system_os_info) t3
+	</select>
+	
+	<!-- 加载最新的五条通知 -->
+	<select id="loadNewNoticeSql" resultType="java.util.HashMap">
+		SELECT id,title,descripter,content,userid,createname,createdate FROM noticemanager WHERE state=0 ORDER BY createdate DESC LIMIT 0,5
+	</select>
+	
+	<!-- 加载最新的五条信息 -->
+	<select id="getNewInfoSql" resultType="java.util.HashMap">
+		SELECT id,title,descripter,content,userid,createname,createdate FROM infomanager WHERE state=0 ORDER BY createdate DESC LIMIT 0,5
+	</select>
+	
+	
+	<!-- 加载用户登录量情况 -->
+	<select id="getClickNumberSql" resultType="java.util.HashMap">
+		SELECT t.`value`,t.`name` FROM (SELECT COUNT(*) AS `value`,simpledate AS `name` FROM system_os_info GROUP BY simpledate ORDER BY simpledate DESC LIMIT 0,7) t ORDER BY NAME ASC
+	</select>
+</mapper>

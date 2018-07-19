@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="instation" >
+	<!-- 查询素有邮箱信息，，更具select的不同查询不同的如果select==0表示查询今天，select==1表示查询OLder同事传入createdate -->
+	<select id="queryEmailInfoSql" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT id,title,descripter,content,userid,createname,createdate,achiveUserId,state FROM emailinfo 
+		WHERE state!=2 
+		AND deletestate=0
+		AND id IN (SELECT emailid FROM email_user WHERE userid=#{userid})
+		<if test="select==0">AND createdate=#{createdate}</if>
+		<if test="select==1">AND createdate&lt;#{createdate}</if>
+		ORDER BY createdate DESC
+	</select>
+	
+	<!-- 删除接受到的邮件 -->
+	<update id="deleteAchiveEmailSql" parameterType="java.util.HashMap">
+		UPDATE emailinfo SET state=2 WHERE id=#{id};
+	</update>
+	
+	<!-- 根据id查询信息 -->
+	<select id="queryEmailInfoByIdSql" resultType="java.util.HashMap" parameterType="java.util.HashMap">
+		SELECT email.id,email.title,email.descripter,email.content,email.userid,email.createname,email.createdate,email.achiveUserId,email.state,con.name,con.email FROM emailinfo email,content con
+		WHERE email.id=#{id} AND con.userid=email.userid
+	</select>
+	
+	<!-- 更新邮件状态 -->
+	<update id="updateEmailStateSql" parameterType="java.util.HashMap">
+		UPDATE emailinfo SET state=#{state} WHERE id=#{id};
+	</update>
+	
+	
+	<!-- 从回收站删除邮件 -->
+	<delete id="deleteEmalForRubbshSql" parameterType="java.util.HashMap">
+		DELETE FROM email_user WHERE userid=#{userid} AND emailid=#{emailid}
+	</delete>
+	
+	<!-- 查询回收站邮件 -->
+	<select id="queryRubbshEmailSql" parameterType="java.util.HashMap" resultType="java.util.HashMap">
+		SELECT id,title,descripter,content,userid,createname,createdate FROM emailinfo 
+		WHERE state=2
+		AND id IN (SELECT emailid FROM email_user WHERE userid=#{userid})
+		ORDER BY createdate DESC
+	</select>
+	
+	<!-- 插入新邮件 -->
+	<insert id="addNewEmailInfoSql" parameterType="java.util.HashMap">
+		INSERT INTO emailInfo(id,title,descripter,content,userid,createname,createdate,achiveUserId)
+		 VALUES (#{id},#{title},#{descripter},#{content},#{userid},#{createname},#{createdate},#{achiveUserId})
+	</insert>
+	
+	<!-- 插入邮件用户关系 -->
+	<insert id="addEmailUserInfoSql" parameterType="java.util.HashMap">
+		INSERT INTO email_user(userid,emailid) VALUES(#{achiveUserId},#{id});
+	</insert>
+	
+	<!-- 查询未读邮件数目 -->
+	<select id="queryEmailInfoTotalSql" parameterType="java.util.HashMap" resultType="long">
+		SELECT COUNT(*) FROM emailinfo WHERE state=0 AND achiveUserId=#{userid}
+	</select>
+</mapper>
